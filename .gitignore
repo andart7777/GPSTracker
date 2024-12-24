@@ -1,0 +1,58 @@
+*.iml
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
+
+# === Основной файл .gitignore для проекта GPSTracker ===
+
+# === Файлы и каталоги IDE ===
+# Исключение конфигурации Android Studio
+.idea/
+# Исключение файлов модулей
+*.iml
+
+# === Локальные настройки ===
+# Исключение файла с путями к SDK
+local.properties
+
+# === Gradle ===
+# Исключение локального кэша Gradle
+.gradle/
+
+# === Каталоги сборки ===
+# Исключение каталога сборки проекта
+/build
+# Исключение каталогов сборки всех модулей
+*/build
+
+# === Файлы кэша, логи и временные файлы ===
+*.log
+*.tmp
+*.lock
+
+# === Бинарные файлы ===
+# Исключение скомпилированных APK файлов
+*.apk
+# Исключение Android библиотек
+*.aar
+# Исключение скомпилированных DEX файлов
+*.dex
+
+# === Ключи подписи ===
+# Исключение ключей подписи приложения
+*.keystore
+# Исключение Java KeyStore
+*.jks
+
+# === Ненужные файлы ОС ===
+# Исключение системных файлов Windows
+Thumbs.db
+

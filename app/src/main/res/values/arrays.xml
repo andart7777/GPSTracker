@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--    Массивы для экрана настроек - Location -->
+    <string-array name="loc_time_update_name">
+        <item>3 sec</item>
+        <item>5 sec</item>
+        <item>10 sec</item>
+    </string-array>
+    <string-array name="loc_time_update_value">
+        <item>3000</item>
+        <item>5000</item>
+        <item>10000</item>
+    </string-array>
+    <!--    Массивы для экрана настроек - Color-->
+    <string-array name="color_name">
+        <item>Blue</item>
+        <item>Red</item>
+        <item>Black</item>
+    </string-array>
+    <string-array name="color_value">
+        <item>#FF00ADFF</item>
+        <item>#FFB60000</item>
+        <item>#FF000000</item>
+    </string-array>
+</resources>
