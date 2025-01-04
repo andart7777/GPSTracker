@@ -27,11 +27,6 @@ class MainActivity : AppCompatActivity() {
                 R.id.id_home -> openFragment(MainFragment.newInstance())
                 R.id.id_tracks -> openFragment(TracksFragment.newInstance())
                 R.id.id_settings -> openFragment(SettingsFragment())
-
-//                // Test switch tabs
-//                R.id.id_home -> showToast("Home") // Using extensions functions
-//                R.id.id_tracks -> Toast.makeText(this, "track", Toast.LENGTH_SHORT).show()
-//                R.id.id_settings -> Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show()
             }
             true
         }

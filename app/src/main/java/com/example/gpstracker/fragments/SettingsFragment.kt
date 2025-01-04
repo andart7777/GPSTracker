@@ -5,10 +5,10 @@ import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.example.gpstracker.R
-import com.example.gpstracker.utils.showToast
 
 // PreferenceFragmentCompat - Специальный класс для создания окна настроек,
 // используя данный класс нет необходимости сохранять значения настроек
+// (сохраняются автоматически, можно получить в любом месте приложения)
 class SettingsFragment : PreferenceFragmentCompat() {
     private lateinit var timePref: Preference // Для получения и отображения на фронте текущего выбранной значения настройки
     private lateinit var colorPref: Preference
@@ -41,7 +41,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun onTimeChange(value: String) {
-        // Код для отображения выбранного значения в title настроек, после выбора ( title: + 3 sec )
+        // Код для отображения выбранного значения в title настроек, после выбора ( title: "+ 3 sec" )
         val nameArray = resources.getStringArray(R.array.loc_time_update_name)
         val valueArray = resources.getStringArray(R.array.loc_time_update_value)
         val title = timePref.title.toString().substringBefore(":")

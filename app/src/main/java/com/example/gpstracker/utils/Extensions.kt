@@ -1,7 +1,5 @@
 package com.example.gpstracker.utils
 
-import android.content.pm.PackageManager
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -34,10 +32,12 @@ fun AppCompatActivity.showToast(s: String) {
     Toast.makeText(this, s, Toast.LENGTH_SHORT).show()
 }
 
-//fun Fragment.checkPermission(p: String): Boolean {
-//    return when (0) { // PackageManager.PERMISSION_GRANTED
-//        ContextCompat.checkSelfPermission(activity as AppCompatActivity, p) -> true
-//        else -> false
-//    }
+// Проверка получено разрешение или нет
+// PackageManager.PERMISSION_GRANTED = 0 --- разрешение есть
+fun Fragment.checkPermission(p: String): Boolean {
+    return when (0) { // when (PackageManager.PERMISSION_GRANTED)
+        ContextCompat.checkSelfPermission(activity as AppCompatActivity, p) -> true
+        else -> false
+    }
 
-//}
+}
