@@ -2,6 +2,7 @@ package com.example.gpstracker.fragments
 
 import android.Manifest
 import android.content.Context
+import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -40,15 +41,16 @@ class MainFragment : Fragment() {
         checkLocPermission() // Используем Launcher после регистрации иначе он выдаст null
 //        activity?.startService(Intent(activity, LocationService::class.java))
     }
-//
-//    override fun onResume() {
-//        super.onResume()
-//        checkLocPermission()
-//    }
-//
-//    override fun onPause() {
-//        super.onPause()
-//    }
+
+
+    override fun onResume() {
+        super.onResume()
+        checkLocPermission()
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
 
     // Базовые настройки карты OSM
     private fun settingsOsm() {
@@ -91,13 +93,50 @@ class MainFragment : Fragment() {
             }
             // Результат запроса передается в виде словаря Map
             // if не может работать с null поэтому true
-            if (resultPerm[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-                initOsm()
+            handlePermissionResult(resultPerm)
+//            if (resultPerm[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+//                initOsm()
 //                checkLocationEnabled()
-            } else {
-                showToast("Вы не дали разрешение на использование местоположения!")
-            }
+//            } else {
+//                showToast("Вы не дали разрешение на использование местоположения!")
+//            }
         }
+    }
+
+    // Обрабатываем результат разрешения
+    private fun handlePermissionResult(resultPerm: Map<String, Boolean>) {
+        // Проверяем разрешение FINE_LOCATION
+        if (resultPerm[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Если Android >= 10, запрашиваем BACKGROUND_LOCATION
+                if (!checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                    requestBackgroundLocationPermission()
+                } else {
+                    initOsm() // Инициализация карты, если оба разрешения уже есть
+                    checkLocationEnabled() // Проверяем включен-ли GPS на устройстве
+                }
+            } else {
+                initOsm() // Если Android < 10, достаточно только FINE_LOCATION
+                checkLocationEnabled() // Проверяем включен-ли GPS на устройстве
+            }
+        } else {
+            showToast("Вы не дали разрешение на использование местоположения!")
+        }
+    }
+
+    // Запрос FINE_LOCATION
+    private fun requestFineLocationPermission() {
+        pLauncher.launch(
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+        )
+    }
+
+    // Запрос BACKGROUND_LOCATION
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun requestBackgroundLocationPermission() {
+        pLauncher.launch(
+            arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        )
     }
 
     // Проверка версии Android, запуск соответствующей функции проверки разрешений (ниже и выше 10 версии)
@@ -112,37 +151,32 @@ class MainFragment : Fragment() {
     // Проверка разрешений для версии Android >= 10, если нет запуск диалога Android разрешение на GPS
     @RequiresApi(Build.VERSION_CODES.Q) // Аннотация сообщает Котлину, функция только для версии Android >= 10
     private fun checkPermissionAfter10() {
-        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-            && checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        ) {
-            initOsm()
-//            checkLocationEnabled()
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                initOsm() // Если оба разрешения уже есть
+                checkLocationEnabled() // Проверяем включен-ли GPS на устройстве
+            } else {
+                requestBackgroundLocationPermission() // Запрашиваем только BACKGROUND_LOCATION
+            }
         } else {
-            pLauncher.launch( // Запуск диалога Android, разрешение на gps
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    // Выше API 30 нельзя запросить (background) одновременно с разрешением на точное местоположение (fine)
-//                    Manifest.permission.ACCESS_BACKGROUND_LOCATION
-
-                )
-            )
+            requestFineLocationPermission() // Сначала запрашиваем FINE_LOCATION
         }
     }
 
+    // Проверка разрешений для Android < 10
     private fun checkPermissionBefore10() {
-        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        ) {
+        if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
             initOsm()
-//            checkLocationEnabled()
+            checkLocationEnabled() // Проверяем включен-ли GPS на устройстве
         } else {
             pLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
         }
     }
 
-//    private fun checkLocationEnabled() {
-//        val LManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-//        val isEnable = LManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-//        if (!isEnable) {
+    private fun checkLocationEnabled() {
+        val lManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isEnable = lManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        if (!isEnable) {
 //            DialogManager.showLocEnableDialog(
 //                activity as AppCompatActivity,
 //                object : DialogManager.Listener {
@@ -151,10 +185,11 @@ class MainFragment : Fragment() {
 //                    }
 //                }
 //            )
-//        } else {
-//            showToast("GPS включен")
-//        }
-//    }
+            showToast("GPS Off - Выключен")
+        } else {
+            showToast("GPS On - Включен")
+        }
+    }
 
     companion object {
         @JvmStatic
