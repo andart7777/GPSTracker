@@ -1,10 +1,5 @@
 package com.example.gpstracker.utils
 
-import android.content.Context
-import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
-import com.example.gpstracker.R
-
 //object DialogManager {
 //    fun showLocEnableDialog(context: Context, listener: Listener) {
 //        val builder = AlertDialog.Builder(context)

@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!--    Необходимо подтверждать для версии Android ниже и выше 10 -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!--    Необходимо подтверждать для версии Android 10 и выше -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
@@ -22,10 +24,12 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+<!--        <service-->
+<!--            android:name=".location.LocationService"-->
+<!--            android:enabled="true"-->
+<!--            android:foregroundServiceType="location" />-->
     </application>
-
 </manifest>
