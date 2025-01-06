@@ -2,9 +2,11 @@ package com.example.gpstracker.fragments
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.gpstracker.databinding.FragmentMainBinding
+import com.example.gpstracker.utils.DialogManager
 import com.example.gpstracker.utils.checkPermission
 import com.example.gpstracker.utils.showToast
 import org.osmdroid.config.Configuration
@@ -26,10 +29,13 @@ class MainFragment : Fragment() {
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
+    private var isFirstLaunch = true // Флаг для первого запуска
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d("MyLog", "onCreateView")
         settingsOsm() // Инициализация карты до загрузки главного экрана
         binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
@@ -37,23 +43,32 @@ class MainFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        Log.d("MyLog", "onViewCreated")
         registerPermission() // Сначала регистрируем Launcher
         checkLocPermission() // Используем Launcher после регистрации иначе он выдаст null
 //        activity?.startService(Intent(activity, LocationService::class.java))
     }
 
-
     override fun onResume() {
         super.onResume()
-        checkLocPermission()
+        Log.d("MyLog", "onResume")
+        if (!isFirstLaunch) { // Выполняем проверку только если это не первый запуск
+            // (предотвращение повторного запуска checkLocPermission при старте)
+            checkLocPermission()
+        } else {
+            isFirstLaunch = false // Сбрасываем флаг после первого запуска
+        }
     }
 
     override fun onPause() {
         super.onPause()
+        Log.d("MyLog", "onPause")
+
     }
 
     // Базовые настройки карты OSM
     private fun settingsOsm() {
+        Log.d("MyLog", "settingsOsm")
         Configuration.getInstance().load(
             activity as AppCompatActivity,
             activity?.getSharedPreferences("osm_pref", Context.MODE_PRIVATE)
@@ -63,6 +78,7 @@ class MainFragment : Fragment() {
 
     // Инициализация карты
     private fun initOsm() = with(binding) {
+        Log.d("MyLog", "initOsm")
         map.controller.setZoom(10.0)
 //        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
         // GpsMyLocationProvider - выдает местоположение
@@ -85,26 +101,20 @@ class MainFragment : Fragment() {
 
     // Регистрация и запуск запроса разрешений
     private fun registerPermission() {
+        Log.d("MyLog", "registerPermission")
         pLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { resultPerm ->
             for ((permission, granted) in resultPerm) {
-                Log.d("TestPermission", "Permission: $permission, Granted: $granted")
+                Log.d("MyLog", "Permission: $permission, Granted: $granted")
             }
-            // Результат запроса передается в виде словаря Map
-            // if не может работать с null поэтому true
             handlePermissionResult(resultPerm)
-//            if (resultPerm[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
-//                initOsm()
-//                checkLocationEnabled()
-//            } else {
-//                showToast("Вы не дали разрешение на использование местоположения!")
-//            }
         }
     }
 
     // Обрабатываем результат разрешения
     private fun handlePermissionResult(resultPerm: Map<String, Boolean>) {
+        Log.d("MyLog", "handlePermissionResult")
         // Проверяем разрешение FINE_LOCATION
         if (resultPerm[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -126,6 +136,7 @@ class MainFragment : Fragment() {
 
     // Запрос FINE_LOCATION
     private fun requestFineLocationPermission() {
+        Log.d("MyLog", "requestFineLocationPermission")
         pLauncher.launch(
             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
         )
@@ -134,6 +145,7 @@ class MainFragment : Fragment() {
     // Запрос BACKGROUND_LOCATION
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun requestBackgroundLocationPermission() {
+        Log.d("MyLog", "requestBackgroundLocationPermission")
         pLauncher.launch(
             arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         )
@@ -141,6 +153,7 @@ class MainFragment : Fragment() {
 
     // Проверка версии Android, запуск соответствующей функции проверки разрешений (ниже и выше 10 версии)
     private fun checkLocPermission() {
+        Log.d("MyLog", "checkLocPermission")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             checkPermissionAfter10()
         } else {
@@ -151,6 +164,7 @@ class MainFragment : Fragment() {
     // Проверка разрешений для версии Android >= 10, если нет запуск диалога Android разрешение на GPS
     @RequiresApi(Build.VERSION_CODES.Q) // Аннотация сообщает Котлину, функция только для версии Android >= 10
     private fun checkPermissionAfter10() {
+        Log.d("MyLog", "checkPermissionAfter10")
         if (checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
             if (checkPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
                 initOsm() // Если оба разрешения уже есть
@@ -174,17 +188,18 @@ class MainFragment : Fragment() {
     }
 
     private fun checkLocationEnabled() {
+        Log.d("MyLog", "checkLocationEnabled")
         val lManager = activity?.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         val isEnable = lManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         if (!isEnable) {
-//            DialogManager.showLocEnableDialog(
-//                activity as AppCompatActivity,
-//                object : DialogManager.Listener {
-//                    override fun onClick() {
-//                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
-//                    }
-//                }
-//            )
+            DialogManager.showLocEnableDialog(
+                activity as AppCompatActivity,
+                object : DialogManager.Listener {
+                    override fun onClick() {
+                        startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                    }
+                }
+            )
             showToast("GPS Off - Выключен")
         } else {
             showToast("GPS On - Включен")

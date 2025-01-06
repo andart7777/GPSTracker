@@ -39,5 +39,4 @@ fun Fragment.checkPermission(p: String): Boolean {
         ContextCompat.checkSelfPermission(activity as AppCompatActivity, p) -> true
         else -> false
     }
-
 }
