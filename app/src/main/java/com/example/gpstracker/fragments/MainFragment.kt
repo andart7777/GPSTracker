@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.gpstracker.databinding.FragmentMainBinding
+import com.example.gpstracker.location.LocationService
 import com.example.gpstracker.utils.DialogManager
 import com.example.gpstracker.utils.checkPermission
 import com.example.gpstracker.utils.showToast
@@ -46,7 +47,11 @@ class MainFragment : Fragment() {
         Log.d("MyLog", "onViewCreated")
         registerPermission() // Сначала регистрируем Launcher
         checkLocPermission() // Используем Launcher после регистрации иначе он выдаст null
-//        activity?.startService(Intent(activity, LocationService::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            activity?.startForegroundService(Intent(activity, LocationService::class.java))
+        } else {
+            activity?.startService(Intent(activity, LocationService::class.java))
+        }
     }
 
     override fun onResume() {
