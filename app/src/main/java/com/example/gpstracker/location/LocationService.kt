@@ -22,6 +22,7 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Если система убьёт сервис, при появлении свободной памяти сервис перезапустится - START_STICKY
         startNotification()
+        isRunning = true
         Log.d("MyLog1", "Service created")
         return START_STICKY
     }
@@ -34,6 +35,7 @@ class LocationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("MyLog1", "onDestroy")
+        isRunning = false
     }
 
     // TODO: Добавить вызов диалогового окна разрешение на показ уведомлений, иначе не работает фоновый сервис
@@ -70,5 +72,7 @@ class LocationService : Service() {
 
     companion object{
         const val CHANNEL_ID = "channel_1"
+        // для проверки в mainfragment сервис запущен или нет (глобальная переменная видна везде)
+        var isRunning = false
     }
 }
