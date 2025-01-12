@@ -3,6 +3,7 @@ package com.example.gpstracker.fragments
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -15,18 +16,31 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.MutableLiveData
+import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
 import com.example.gpstracker.location.LocationService
 import com.example.gpstracker.utils.DialogManager
+import com.example.gpstracker.utils.TimeUtils
 import com.example.gpstracker.utils.checkPermission
 import com.example.gpstracker.utils.showToast
+import kotlinx.coroutines.delay
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import java.util.Timer
+import java.util.TimerTask
 
 class MainFragment : Fragment() {
+    private var isServiceRunning = false
+    private var timer: Timer? = null
+    private var startTime = 0L
+    // Для безопасной передачи данный о времени в textview, в случае если он еще не нарисован будет ошибка
+    // (в MutableLiveData добавляется специальный обсервер который следить за циклом жизни нашего фрагмента)
+    private var timeData = MutableLiveData<String>()
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
@@ -47,11 +61,76 @@ class MainFragment : Fragment() {
         Log.d("MyLog", "onViewCreated")
         registerPermission() // Сначала регистрируем Launcher
         checkLocPermission() // Используем Launcher после регистрации иначе он выдаст null
+        setOnClicks()
+        checkServiceState()
+        updateTime()
+    }
+
+    private fun setOnClicks() = with(binding) {
+        val listener = onClicks()
+        fStartStop.setOnClickListener(listener)
+    }
+
+    // Для экономии ресурсов общий слушатель нажатий для всех кнопок
+    private fun onClicks(): View.OnClickListener {
+        return View.OnClickListener {
+            when (it.id) {
+                R.id.fStartStop -> startStopService()
+            }
+        }
+    }
+
+    private fun updateTime() {
+        timeData.observe(viewLifecycleOwner){
+            binding.tvTime.text = it
+        }
+    }
+
+    private fun startTimer() {
+        timer?.cancel()
+        timer = Timer()
+        startTime = System.currentTimeMillis()
+        timer?.schedule(object: TimerTask() {
+            override fun run() { // запускается на второстепенном потоке
+                activity?.runOnUiThread { // запуск на основном потоке
+                    timeData.value = getCurrentTime()
+                }
+            }
+
+        }, 1, 1)
+    }
+
+    private fun getCurrentTime(): String {
+        return "Time: ${TimeUtils.getTime(System.currentTimeMillis() - startTime)}"
+    }
+
+    private fun startStopService() {
+        if (!isServiceRunning) {
+            startLocService()
+        } else {
+            activity?.stopService(Intent(activity, LocationService::class.java))
+            binding.fStartStop.setImageResource(R.drawable.ic_play)
+            timer?.cancel()
+
+        }
+        isServiceRunning = !isServiceRunning
+    }
+
+    private fun checkServiceState() {
+        isServiceRunning = LocationService.isRunning
+        if (isServiceRunning) {
+            binding.fStartStop.setImageResource(R.drawable.ic_stop)
+        }
+    }
+
+    private fun startLocService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             activity?.startForegroundService(Intent(activity, LocationService::class.java))
         } else {
             activity?.startService(Intent(activity, LocationService::class.java))
         }
+        binding.fStartStop.setImageResource(R.drawable.ic_stop)
+        startTimer()
     }
 
     override fun onResume() {
