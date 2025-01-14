@@ -43,6 +43,7 @@ dependencies {
     implementation (libs.xosmbonuspack)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation (libs.play.services.location)
     implementation (libs.androidx.preference.ktx)
     implementation(libs.material)
     implementation(libs.androidx.activity)

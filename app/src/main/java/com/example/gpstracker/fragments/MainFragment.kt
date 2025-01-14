@@ -89,7 +89,7 @@ class MainFragment : Fragment() {
     private fun startTimer() {
         timer?.cancel()
         timer = Timer()
-        startTime = System.currentTimeMillis()
+        startTime = LocationService.startTimer // было System.currentTimeMillis()
         timer?.schedule(object: TimerTask() {
             override fun run() { // запускается на второстепенном потоке
                 activity?.runOnUiThread { // запуск на основном потоке
@@ -120,6 +120,7 @@ class MainFragment : Fragment() {
         isServiceRunning = LocationService.isRunning
         if (isServiceRunning) {
             binding.fStartStop.setImageResource(R.drawable.ic_stop)
+            startTimer()
         }
     }
 
@@ -130,6 +131,7 @@ class MainFragment : Fragment() {
             activity?.startService(Intent(activity, LocationService::class.java))
         }
         binding.fStartStop.setImageResource(R.drawable.ic_stop)
+        LocationService.startTimer = System.currentTimeMillis()
         startTimer()
     }
 
