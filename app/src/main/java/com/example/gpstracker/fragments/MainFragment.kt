@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -18,10 +17,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
@@ -32,13 +29,13 @@ import com.example.gpstracker.utils.DialogManager
 import com.example.gpstracker.utils.TimeUtils
 import com.example.gpstracker.utils.checkPermission
 import com.example.gpstracker.utils.showToast
-import kotlinx.coroutines.delay
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Timer
 import java.util.TimerTask
+import kotlin.text.*
 
 class MainFragment : Fragment() {
     private var isServiceRunning = false
@@ -90,9 +87,11 @@ class MainFragment : Fragment() {
     private fun locationUpdates() = with(binding) {
         model.locationUpdates.observe(viewLifecycleOwner){
             val distance = "Distance: ${String.format("%.1f", it.distance)} m"
-            val velocity = "Velocity: ${String.format("%.1f", 3.6 * it.velocity)} km/h"
+            val velocity = "Velocity: ${String.format("%.1f", 3.6f * it.velocity)} km/h"
+            val averageVelocity = "Average velocity: ${getAverageSpeed(it.distance)} km/h"
             tvDistance.text = distance
             tvVelocity.text = velocity
+            tvAverageVel.text = averageVelocity
         }
     }
 
@@ -114,6 +113,10 @@ class MainFragment : Fragment() {
             }
 
         }, 1, 1)
+    }
+
+    private fun getAverageSpeed(distance: Float) : String {
+        return String.format("%.1f", 3.6f * (distance / ((System.currentTimeMillis() - startTime) / 1000.0f)))
     }
 
     private fun getCurrentTime(): String {
