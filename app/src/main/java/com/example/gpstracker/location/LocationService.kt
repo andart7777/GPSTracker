@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
@@ -24,6 +25,8 @@ import com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY
 
 // Работает в фоновом режиме, работает на основном потоке
 class LocationService : Service() {
+    private var distance = 0.0f
+    private var lastLocation: Location? = null
     // Класс, который дает возможность получать сведения о местоположении
     private lateinit var locProvider: FusedLocationProviderClient
     private lateinit var locRequest: LocationRequest
@@ -58,7 +61,17 @@ class LocationService : Service() {
     private var locCallBack = object : LocationCallback() {
         override fun onLocationResult(lResult: LocationResult) {
             super.onLocationResult(lResult)
-            Log.d("MylogLoc", "${lResult.lastLocation?.latitude}")
+            val currentLocation = lResult.lastLocation
+            if (lastLocation != null && currentLocation != null) {
+                // Из-за не большой неточности показаний GPS (дрожания на одном месте) данные дистанции все время будут добавляться.
+                // Если скорость не меняется больше значения (высчитать экспериментально или сделать настройки), то суммируем новые значения дистанции
+                if (currentLocation.speed > 0.2) {
+                    distance += lastLocation?.distanceTo(currentLocation)!! // (currentLocation ?: lastLocation)!! / ?: 0.0f оператор элвиса "?:"
+                }
+            }
+            lastLocation = currentLocation
+//            Log.d("MylogLoc", "${lResult.lastLocation?.latitude}")
+            Log.d("MylogLoc", "$distance")
         }
     }
 
