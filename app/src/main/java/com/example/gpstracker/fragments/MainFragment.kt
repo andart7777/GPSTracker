@@ -1,8 +1,10 @@
 package com.example.gpstracker.fragments
 
 import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.drawable.Drawable
 import android.location.LocationManager
 import android.os.Build
@@ -19,8 +21,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
+import com.example.gpstracker.location.LocationModel
 import com.example.gpstracker.location.LocationService
 import com.example.gpstracker.utils.DialogManager
 import com.example.gpstracker.utils.TimeUtils
@@ -38,9 +42,11 @@ class MainFragment : Fragment() {
     private var isServiceRunning = false
     private var timer: Timer? = null
     private var startTime = 0L
+
     // Для безопасной передачи данный о времени в textview, в случае если он еще не нарисован будет ошибка
     // (в MutableLiveData добавляется специальный обсервер который следить за циклом жизни нашего фрагмента)
     private var timeData = MutableLiveData<String>()
+
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
@@ -64,6 +70,7 @@ class MainFragment : Fragment() {
         setOnClicks()
         checkServiceState()
         updateTime()
+        registerLocReceiver()
     }
 
     private fun setOnClicks() = with(binding) {
@@ -81,7 +88,7 @@ class MainFragment : Fragment() {
     }
 
     private fun updateTime() {
-        timeData.observe(viewLifecycleOwner){
+        timeData.observe(viewLifecycleOwner) {
             binding.tvTime.text = it
         }
     }
@@ -90,7 +97,7 @@ class MainFragment : Fragment() {
         timer?.cancel()
         timer = Timer()
         startTime = LocationService.startTimer // было System.currentTimeMillis()
-        timer?.schedule(object: TimerTask() {
+        timer?.schedule(object : TimerTask() {
             override fun run() { // запускается на второстепенном потоке
                 activity?.runOnUiThread { // запуск на основном потоке
                     timeData.value = getCurrentTime()
@@ -290,6 +297,25 @@ class MainFragment : Fragment() {
         } else {
             showToast("GPS On - Включен")
         }
+    }
+
+    // Получаем данные из Intent из locData
+    private var receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            // Фильтруем по нашему Intent
+            if (intent?.action == LocationService.LOC_MODEL_INTENT) {
+                val locModel =
+                    intent.getSerializableExtra(LocationService.LOC_MODEL_INTENT) as LocationModel
+                Log.d("MylogReceiver", "Distance: ${locModel.distance}")
+            }
+        }
+    }
+
+    // Регистрируем Receiver
+    private fun registerLocReceiver() {
+        val locFilter = IntentFilter(LocationService.LOC_MODEL_INTENT)
+        LocalBroadcastManager.getInstance(activity as AppCompatActivity)
+            .registerReceiver(receiver, locFilter)
     }
 
     companion object {
