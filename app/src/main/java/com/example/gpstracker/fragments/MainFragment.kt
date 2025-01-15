@@ -20,8 +20,10 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout.DrawerListener
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.MutableLiveData
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
 import com.example.gpstracker.location.LocationModel
@@ -42,15 +44,11 @@ class MainFragment : Fragment() {
     private var isServiceRunning = false
     private var timer: Timer? = null
     private var startTime = 0L
-
-    // Для безопасной передачи данный о времени в textview, в случае если он еще не нарисован будет ошибка
-    // (в MutableLiveData добавляется специальный обсервер который следить за циклом жизни нашего фрагмента)
-    private var timeData = MutableLiveData<String>()
-
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
     private var isFirstLaunch = true // Флаг для первого запуска
+    private val model: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -71,6 +69,7 @@ class MainFragment : Fragment() {
         checkServiceState()
         updateTime()
         registerLocReceiver()
+        locationUpdates()
     }
 
     private fun setOnClicks() = with(binding) {
@@ -87,8 +86,18 @@ class MainFragment : Fragment() {
         }
     }
 
+    // MainViewModel
+    private fun locationUpdates() = with(binding) {
+        model.locationUpdates.observe(viewLifecycleOwner){
+            val distance = "Distance: ${String.format("%.1f", it.distance)} m"
+            val velocity = "Velocity: ${String.format("%.1f", 3.6 * it.velocity)} km/h"
+            tvDistance.text = distance
+            tvVelocity.text = velocity
+        }
+    }
+
     private fun updateTime() {
-        timeData.observe(viewLifecycleOwner) {
+        model.timeData.observe(viewLifecycleOwner) {
             binding.tvTime.text = it
         }
     }
@@ -100,7 +109,7 @@ class MainFragment : Fragment() {
         timer?.schedule(object : TimerTask() {
             override fun run() { // запускается на второстепенном потоке
                 activity?.runOnUiThread { // запуск на основном потоке
-                    timeData.value = getCurrentTime()
+                    model.timeData.value = getCurrentTime()
                 }
             }
 
@@ -307,6 +316,7 @@ class MainFragment : Fragment() {
                 val locModel =
                     intent.getSerializableExtra(LocationService.LOC_MODEL_INTENT) as LocationModel
                 Log.d("MylogReceiver", "Distance: ${locModel.distance}")
+                model.locationUpdates.value = locModel
             }
         }
     }
