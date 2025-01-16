@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
@@ -31,6 +32,8 @@ import com.example.gpstracker.utils.checkPermission
 import com.example.gpstracker.utils.showToast
 import org.osmdroid.config.Configuration
 import org.osmdroid.library.BuildConfig
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Timer
@@ -38,9 +41,12 @@ import java.util.TimerTask
 import kotlin.text.*
 
 class MainFragment : Fragment() {
+    private var pl: Polyline? = null
     private var isServiceRunning = false
+    private var firstStart = true // для заполнения списка Polyline, определение первый запуск или нет
     private var timer: Timer? = null
     private var startTime = 0L
+
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
@@ -85,13 +91,14 @@ class MainFragment : Fragment() {
 
     // MainViewModel
     private fun locationUpdates() = with(binding) {
-        model.locationUpdates.observe(viewLifecycleOwner){
+        model.locationUpdates.observe(viewLifecycleOwner) {
             val distance = "Distance: ${String.format("%.1f", it.distance)} m"
             val velocity = "Velocity: ${String.format("%.1f", 3.6f * it.velocity)} km/h"
             val averageVelocity = "Average velocity: ${getAverageSpeed(it.distance)} km/h"
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAverageVel.text = averageVelocity
+            updatePolyline(it.geoPointsList)
         }
     }
 
@@ -115,8 +122,11 @@ class MainFragment : Fragment() {
         }, 1, 1)
     }
 
-    private fun getAverageSpeed(distance: Float) : String {
-        return String.format("%.1f", 3.6f * (distance / ((System.currentTimeMillis() - startTime) / 1000.0f)))
+    private fun getAverageSpeed(distance: Float): String {
+        return String.format(
+            "%.1f",
+            3.6f * (distance / ((System.currentTimeMillis() - startTime) / 1000.0f))
+        )
     }
 
     private fun getCurrentTime(): String {
@@ -183,12 +193,15 @@ class MainFragment : Fragment() {
 
     // Инициализация карты
     private fun initOsm() = with(binding) {
+        pl = Polyline()
+        pl?.outlinePaint?.color = Color.BLUE
         Log.d("MyLog", "initOsm")
         map.controller.setZoom(10.0)
 //        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
         // GpsMyLocationProvider - выдает местоположение
         val mLocProvider = GpsMyLocationProvider(activity)
         // Overlay - слой наложения точек, меток на карте и получение местоположения
+        // (точка с текущим местоположением)
         val mLocOverlay = MyLocationNewOverlay(mLocProvider, map)
         // Включить определение местоположения устройства
         mLocOverlay.enableMyLocation()
@@ -201,6 +214,7 @@ class MainFragment : Fragment() {
             // Очищаем экран при первом запуске
             map.overlays.clear()
             map.overlays.add(mLocOverlay)
+            map.overlays.add(pl)
         }
     }
 
@@ -329,6 +343,36 @@ class MainFragment : Fragment() {
         val locFilter = IntentFilter(LocationService.LOC_MODEL_INTENT)
         LocalBroadcastManager.getInstance(activity as AppCompatActivity)
             .registerReceiver(receiver, locFilter)
+    }
+
+    // Добавление точек онлайн
+    private fun addPoint(list: List<GeoPoint>) {
+        pl?.addPoint(list[list.size - 1])
+    }
+
+    // Заполнение точек после возврата в приложение из фонового сервиса
+    private fun fillPolyline(list: List<GeoPoint>) {
+        list.forEach {
+            pl?.addPoint(it)
+        }
+    }
+
+    // Проверяем первый запуск - перегружаем список полностью, иначе добавляем по одной точке.
+    private fun updatePolyline(list: List<GeoPoint>) {
+        // проверяем если список геоточек не пустой
+        if (list.size > 1 && firstStart) {
+            fillPolyline(list)
+            firstStart = false
+        } else {
+            addPoint(list)
+        }
+    }
+
+    // Закрываем регистрацию на получение данных Broadcast, как только фрагмент закрывается
+    override fun onDetach() {
+        super.onDetach()
+        LocalBroadcastManager.getInstance(activity as AppCompatActivity)
+            .unregisterReceiver(receiver)
     }
 
     companion object {
