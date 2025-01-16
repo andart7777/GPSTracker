@@ -27,14 +27,13 @@ import org.osmdroid.util.GeoPoint
 
 // Работает в фоновом режиме, работает на основном потоке
 class LocationService : Service() {
+
     private var distance = 0.0f
     private var lastLocation: Location? = null
-
     // Класс, который дает возможность получать сведения о местоположении
     private lateinit var locProvider: FusedLocationProviderClient
     private lateinit var locRequest: LocationRequest
     private lateinit var geoPointsList: ArrayList<GeoPoint>
-
     // Связывает сервис с activity
     override fun onBind(intent: Intent?): IBinder? {
         return null
