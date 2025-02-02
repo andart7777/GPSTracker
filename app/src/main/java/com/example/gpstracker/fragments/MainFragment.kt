@@ -43,7 +43,8 @@ import kotlin.text.*
 class MainFragment : Fragment() {
     private var pl: Polyline? = null
     private var isServiceRunning = false
-    private var firstStart = true // для заполнения списка Polyline, определение первый запуск или нет
+    private var firstStart =
+        true // для заполнения списка Polyline, определение первый запуск или нет
     private var timer: Timer? = null
     private var startTime = 0L
 
@@ -140,7 +141,11 @@ class MainFragment : Fragment() {
             activity?.stopService(Intent(activity, LocationService::class.java))
             binding.fStartStop.setImageResource(R.drawable.ic_play)
             timer?.cancel()
-
+            DialogManager.showSaveDialog(requireContext(), object : DialogManager.Listener {
+                override fun onClick() {
+                    showToast("Track saved!!")
+                }
+            })
         }
         isServiceRunning = !isServiceRunning
     }

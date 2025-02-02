@@ -2,8 +2,12 @@ package com.example.gpstracker.utils
 
 import android.app.AlertDialog
 import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.LayoutInflater
 import android.widget.Toast
 import com.example.gpstracker.R
+import com.example.gpstracker.databinding.SaveDialogBinding
 
 object DialogManager {
     fun showLocEnableDialog(context: Context, listener: Listener) {
@@ -19,6 +23,27 @@ object DialogManager {
             dialog.dismiss()
             Toast.makeText(context, "No", Toast.LENGTH_SHORT).show()
         }
+        dialog.show()
+    }
+
+    fun showSaveDialog(context: Context, listener: Listener) {
+        val builder = AlertDialog.Builder(context)
+        // Кастомная разметка для диалога
+        val binding = SaveDialogBinding.inflate(LayoutInflater.from(context), null, false)
+        builder.setView(binding.root)
+        val dialog = builder.create()
+
+        binding.apply {
+            bSave.setOnClickListener {
+                listener.onClick()
+                dialog.dismiss()
+            }
+            bCancel.setOnClickListener {
+                dialog.dismiss()
+            }
+        }
+        // Прозрачный фон диалогового окна (иначе не видны скругления карточки диалога)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         dialog.show()
     }
 
