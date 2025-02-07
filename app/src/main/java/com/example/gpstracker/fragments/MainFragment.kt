@@ -24,6 +24,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
+import com.example.gpstracker.db.TrackItem
 import com.example.gpstracker.location.LocationModel
 import com.example.gpstracker.location.LocationService
 import com.example.gpstracker.utils.DialogManager
@@ -41,6 +42,7 @@ import java.util.TimerTask
 import kotlin.text.*
 
 class MainFragment : Fragment() {
+    private var trackItem: TrackItem? = null
     private var pl: Polyline? = null
     private var isServiceRunning = false
     private var firstStart =
@@ -99,6 +101,15 @@ class MainFragment : Fragment() {
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAverageVel.text = averageVelocity
+            // Запись данных в базу данных
+            trackItem = TrackItem(
+                null,
+                getCurrentTime(),
+                TimeUtils.getDate(),
+                String.format("%.1f", it.distance / 1000),
+                getAverageSpeed(it.distance),
+                ""
+            )
             updatePolyline(it.geoPointsList)
         }
     }
@@ -141,11 +152,13 @@ class MainFragment : Fragment() {
             activity?.stopService(Intent(activity, LocationService::class.java))
             binding.fStartStop.setImageResource(R.drawable.ic_play)
             timer?.cancel()
-            DialogManager.showSaveDialog(requireContext(), object : DialogManager.Listener {
-                override fun onClick() {
-                    showToast("Track saved!!")
-                }
-            })
+            DialogManager.showSaveDialog(requireContext(),
+                trackItem,
+                object : DialogManager.Listener {
+                    override fun onClick() {
+                        showToast("Track saved!!")
+                    }
+                })
         }
         isServiceRunning = !isServiceRunning
     }
@@ -201,7 +214,7 @@ class MainFragment : Fragment() {
         pl = Polyline()
         pl?.outlinePaint?.color = Color.BLUE
         Log.d("MyLog", "initOsm")
-        map.controller.setZoom(10.0)
+        map.controller.setZoom(18.0)
 //        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
         // GpsMyLocationProvider - выдает местоположение
         val mLocProvider = GpsMyLocationProvider(activity)
