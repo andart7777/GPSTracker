@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.SaveDialogBinding
+import com.example.gpstracker.db.TrackItem
 
 object DialogManager {
     fun showLocEnableDialog(context: Context, listener: Listener) {
@@ -26,7 +27,7 @@ object DialogManager {
         dialog.show()
     }
 
-    fun showSaveDialog(context: Context, listener: Listener) {
+    fun showSaveDialog(context: Context, item: TrackItem, listener: Listener) {
         val builder = AlertDialog.Builder(context)
         // Кастомная разметка для диалога
         val binding = SaveDialogBinding.inflate(LayoutInflater.from(context), null, false)
@@ -34,6 +35,9 @@ object DialogManager {
         val dialog = builder.create()
 
         binding.apply {
+            tvTimeDialog.text = item.time
+            tvSpeedDialog.text = item.velocity
+            tvDistanceDialog.text = item.distance
             bSave.setOnClickListener {
                 listener.onClick()
                 dialog.dismiss()
