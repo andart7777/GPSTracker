@@ -42,7 +42,7 @@ import java.util.TimerTask
 import kotlin.text.*
 
 class MainFragment : Fragment() {
-    private var trackItem: TrackItem? = null
+    private var locationModel: LocationModel? = null
     private var pl: Polyline? = null
     private var isServiceRunning = false
     private var firstStart =
@@ -101,15 +101,7 @@ class MainFragment : Fragment() {
             tvDistance.text = distance
             tvVelocity.text = velocity
             tvAverageVel.text = averageVelocity
-            // Запись данных в базу данных
-            trackItem = TrackItem(
-                null,
-                getCurrentTime(),
-                TimeUtils.getDate(),
-                String.format("%.1f", it.distance / 1000),
-                getAverageSpeed(it.distance),
-                ""
-            )
+            locationModel = it
             updatePolyline(it.geoPointsList)
         }
     }
@@ -145,6 +137,15 @@ class MainFragment : Fragment() {
         return "Time: ${TimeUtils.getTime(System.currentTimeMillis() - startTime)}"
     }
 
+    private fun geoPointsToString(list: List<GeoPoint>): String {
+        val sb = StringBuilder()
+        list.forEach {
+            sb.append("${it.latitude}, ${it.longitude}/")
+        }
+        Log.d("Mylog123", "$sb")
+        return sb.toString()
+    }
+
     private fun startStopService() {
         if (!isServiceRunning) {
             startLocService()
@@ -153,7 +154,7 @@ class MainFragment : Fragment() {
             binding.fStartStop.setImageResource(R.drawable.ic_play)
             timer?.cancel()
             DialogManager.showSaveDialog(requireContext(),
-                trackItem,
+                getTrackItem(),
                 object : DialogManager.Listener {
                     override fun onClick() {
                         showToast("Track saved!!")
@@ -161,6 +162,17 @@ class MainFragment : Fragment() {
                 })
         }
         isServiceRunning = !isServiceRunning
+    }
+
+    private fun getTrackItem(): TrackItem {
+        return TrackItem(
+            null,
+            getCurrentTime(),
+            TimeUtils.getDate(),
+            String.format("%.1f", locationModel?.distance?.div(1000) ?: 0 ),
+            getAverageSpeed(locationModel?.distance ?: 0.0f),
+            geoPointsToString(locationModel?.geoPointsList ?: listOf())
+        )
     }
 
     private fun checkServiceState() {
