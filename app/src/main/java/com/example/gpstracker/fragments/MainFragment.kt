@@ -21,9 +21,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.example.gpstracker.MainApp
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
+import com.example.gpstracker.db.MainDb
 import com.example.gpstracker.db.TrackItem
 import com.example.gpstracker.location.LocationModel
 import com.example.gpstracker.location.LocationService
@@ -54,7 +56,10 @@ class MainFragment : Fragment() {
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
     private var isFirstLaunch = true // Флаг для первого запуска
-    private val model: MainViewModel by activityViewModels()
+    private val model: MainViewModel by activityViewModels{
+        MainViewModel.ViewModelFactory((requireContext().applicationContext as MainApp).database)
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -76,6 +81,10 @@ class MainFragment : Fragment() {
         updateTime()
         registerLocReceiver()
         locationUpdates()
+        model.tracks.observe(viewLifecycleOwner){
+            Log.d("MyLogDB", "List size: ${it}")
+            Log.d("MyLogDB", "List size: ${it.size}")
+        }
     }
 
     private fun setOnClicks() = with(binding) {
@@ -153,11 +162,13 @@ class MainFragment : Fragment() {
             activity?.stopService(Intent(activity, LocationService::class.java))
             binding.fStartStop.setImageResource(R.drawable.ic_play)
             timer?.cancel()
+            val track = getTrackItem()
             DialogManager.showSaveDialog(requireContext(),
-                getTrackItem(),
+                track,
                 object : DialogManager.Listener {
                     override fun onClick() {
                         showToast("Track saved!!")
+                        model.insertTrack(track)
                     }
                 })
         }
