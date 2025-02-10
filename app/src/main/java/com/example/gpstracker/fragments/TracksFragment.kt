@@ -57,7 +57,10 @@ class TracksFragment : Fragment(), TrackAdaptor.Listener {
     override fun onClick(track: TrackItem, type: TrackAdaptor.ClickType) {
         when(type){
             TrackAdaptor.ClickType.DELETE -> model.deleteTrack(track)
-            TrackAdaptor.ClickType.OPEN -> openFragment(ViewTrackFragment.newInstance())
+            TrackAdaptor.ClickType.OPEN -> {
+                model.currentTrack.value = track
+                openFragment(ViewTrackFragment.newInstance())
+            }
         }
     }
 }
