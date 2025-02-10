@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 class MainViewModel(db: MainDb) : ViewModel() {
     val dao = db.getDao()
     val locationUpdates = MutableLiveData<LocationModel>()
+    val currentTrack = MutableLiveData<TrackItem>()
 
     // Для безопасной передачи данных в textview, в случае если он еще не нарисован или fragment изменен (переворот экрана) будет ошибка
     // (в MutableLiveData добавляется специальный обсервер который следить за циклом жизни нашего фрагмента)
