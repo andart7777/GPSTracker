@@ -56,7 +56,7 @@ class MainFragment : Fragment() {
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
     private lateinit var binding: FragmentMainBinding
     private var isFirstLaunch = true // Флаг для первого запуска
-    private val model: MainViewModel by activityViewModels{
+    private val model: MainViewModel by activityViewModels {
         MainViewModel.ViewModelFactory((requireContext().applicationContext as MainApp).database)
     }
 
@@ -176,7 +176,7 @@ class MainFragment : Fragment() {
             null,
             getCurrentTime(),
             TimeUtils.getDate(),
-            String.format("%.1f", locationModel?.distance?.div(1000) ?: 0 ),
+            String.format("%.1f", locationModel?.distance?.div(1000) ?: 0),
             getAverageSpeed(locationModel?.distance ?: 0.0f),
             geoPointsToString(locationModel?.geoPointsList ?: listOf())
         )
