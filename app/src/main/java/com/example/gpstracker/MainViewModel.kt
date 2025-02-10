@@ -25,6 +25,10 @@ class MainViewModel(db: MainDb) : ViewModel() {
         dao.insertTrack(trackItem)
     }
 
+    fun deleteTrack(trackItem: TrackItem) = viewModelScope.launch {
+        dao.deleteTrack(trackItem)
+    }
+
     // Этот класс необходим, что бы MainViewModel был конструктор (db: MainDb) для передачи в него базы данных.
     class ViewModelFactory(private val db: MainDb) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
