@@ -13,6 +13,7 @@ import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.databinding.TracksBinding
 import com.example.gpstracker.db.TrackAdaptor
 import com.example.gpstracker.db.TrackItem
+import com.example.gpstracker.utils.openFragment
 
 class TracksFragment : Fragment(), TrackAdaptor.Listener {
     private lateinit var binding: TracksBinding
@@ -36,7 +37,7 @@ class TracksFragment : Fragment(), TrackAdaptor.Listener {
     }
 
     private fun getTracks() {
-        model.tracks.observe(viewLifecycleOwner){
+        model.tracks.observe(viewLifecycleOwner) {
             adaptor.submitList(it)
             binding.tvEmpty.visibility = if (it.isEmpty()) View.VISIBLE else View.GONE
         }
@@ -53,7 +54,10 @@ class TracksFragment : Fragment(), TrackAdaptor.Listener {
         fun newInstance() = TracksFragment()
     }
 
-    override fun onClick(track: TrackItem) {
-        model.deleteTrack(track)
+    override fun onClick(track: TrackItem, type: TrackAdaptor.ClickType) {
+        when(type){
+            TrackAdaptor.ClickType.DELETE -> model.deleteTrack(track)
+            TrackAdaptor.ClickType.OPEN -> openFragment(ViewTrackFragment.newInstance())
+        }
     }
 }
