@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.preference.PreferenceManager
 import com.example.gpstracker.MainApp
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
@@ -230,9 +231,13 @@ class MainFragment : Fragment() {
 
     // Инициализация карты
     private fun initOsm() = with(binding) {
+        map.setMultiTouchControls(true) // управление зуумом на физическом устройстве щипком
         pl = Polyline()
-        pl?.outlinePaint?.color = Color.BLUE
-        Log.d("MyLog", "initOsm")
+//        pl?.outlinePaint?.color = Color.BLUE
+        pl?.outlinePaint?.color = Color.parseColor(
+            PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getString("color_key", "#FF00ADFF")
+        )
         map.controller.setZoom(18.0)
 //        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
         // GpsMyLocationProvider - выдает местоположение

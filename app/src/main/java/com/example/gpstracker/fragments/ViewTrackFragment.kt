@@ -1,6 +1,7 @@
 package com.example.gpstracker.fragments
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.preference.Preference
+import androidx.preference.PreferenceManager
 import com.example.gpstracker.MainApp
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
@@ -38,6 +41,7 @@ class ViewTrackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        binding.map.setMultiTouchControls(true) // управление зуумом на физическом устройстве щипком
         getTrack()
     }
 
@@ -71,7 +75,7 @@ class ViewTrackFragment : Fragment() {
         binding.map.controller.animateTo(startPosition)
     }
 
-    private  fun setMarkers(list: List<GeoPoint>) = with(binding) {
+    private fun setMarkers(list: List<GeoPoint>) = with(binding) {
         val startMarker = Marker(map)
         val finishMarker = Marker(map)
         startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
@@ -86,6 +90,10 @@ class ViewTrackFragment : Fragment() {
 
     private fun getPolyline(geoPoint: String): Polyline {
         val polyline = Polyline()
+        polyline.outlinePaint.color = Color.parseColor(
+            PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getString("color_key", "#FF00ADFF")
+        )
         val list = geoPoint.split("/")
         list.forEach {
             if (it.isEmpty()) return@forEach
