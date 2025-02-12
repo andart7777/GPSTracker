@@ -52,6 +52,7 @@ class MainFragment : Fragment() {
         true // для заполнения списка Polyline, определение первый запуск или нет
     private var timer: Timer? = null
     private var startTime = 0L
+    private lateinit var mLocOverlay: MyLocationNewOverlay
 
     // С помощью pLauncher вызываем диалог. Список из разрешений которые хотим получить - Array<String>
     private lateinit var pLauncher: ActivityResultLauncher<Array<String>>
@@ -87,6 +88,7 @@ class MainFragment : Fragment() {
     private fun setOnClicks() = with(binding) {
         val listener = onClicks()
         fStartStop.setOnClickListener(listener)
+        fCenter.setOnClickListener(listener)
     }
 
     // Для экономии ресурсов общий слушатель нажатий для всех кнопок
@@ -94,8 +96,14 @@ class MainFragment : Fragment() {
         return View.OnClickListener {
             when (it.id) {
                 R.id.fStartStop -> startStopService()
+                R.id.fCenter -> centerLocation()
             }
         }
+    }
+
+    private fun centerLocation() {
+        binding.map.controller.animateTo(mLocOverlay.myLocation)
+        mLocOverlay.enableFollowLocation()
     }
 
     // MainViewModel
@@ -244,7 +252,7 @@ class MainFragment : Fragment() {
         val mLocProvider = GpsMyLocationProvider(activity)
         // Overlay - слой наложения точек, меток на карте и получение местоположения
         // (точка с текущим местоположением)
-        val mLocOverlay = MyLocationNewOverlay(mLocProvider, map)
+        mLocOverlay = MyLocationNewOverlay(mLocProvider, map)
         // Включить определение местоположения устройства
         mLocOverlay.enableMyLocation()
         // Перемещение карты, слежение за перемещением устройства
