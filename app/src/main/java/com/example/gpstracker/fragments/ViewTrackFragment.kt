@@ -25,6 +25,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 
 class ViewTrackFragment : Fragment() {
+    private var startPoint: GeoPoint? = null
     private lateinit var binding: ViewTrackBinding
     private val model: MainViewModel by activityViewModels {
         MainViewModel.ViewModelFactory((requireContext().applicationContext as MainApp).database)
@@ -43,6 +44,9 @@ class ViewTrackFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.map.setMultiTouchControls(true) // управление зуумом на физическом устройстве щипком
         getTrack()
+        binding.fCenter.setOnClickListener {
+            if (startPoint != null) binding.map.controller.animateTo(startPoint)
+        }
     }
 
     private fun getTrack() = with(binding) {
@@ -67,6 +71,7 @@ class ViewTrackFragment : Fragment() {
             } else {
                 goToStartPosition(GeoPoint(0.0, 0.0)) // Если точек нет, центрируем на 0,0
             }
+            startPoint = polyline.actualPoints[0]
         }
     }
 
