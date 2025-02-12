@@ -15,6 +15,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.preference.PreferenceManager
 import com.example.gpstracker.MainActivity
 import com.example.gpstracker.R
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -28,12 +29,16 @@ import org.osmdroid.util.GeoPoint
 // Работает в фоновом режиме, работает на основном потоке
 class LocationService : Service() {
 
+    private var isDebug = false
+
     private var distance = 0.0f
     private var lastLocation: Location? = null
+
     // Класс, который дает возможность получать сведения о местоположении
     private lateinit var locProvider: FusedLocationProviderClient
     private lateinit var locRequest: LocationRequest
     private lateinit var geoPointsList: ArrayList<GeoPoint>
+
     // Связывает сервис с activity
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -67,21 +72,23 @@ class LocationService : Service() {
             super.onLocationResult(lResult)
             val currentLocation = lResult.lastLocation
             if (lastLocation != null && currentLocation != null) {
-                // Из-за не большой неточности показаний GPS (дрожания на одном месте) данные дистанции все время будут добавляться.
-                // Если скорость не меняется больше значения (высчитать экспериментально или сделать настройки), то суммируем новые значения дистанции
-                //if (currentLocation.speed > 0.2) {
-                distance += lastLocation?.distanceTo(currentLocation)!! // (currentLocation ?: lastLocation)!! / ?: 0.0f оператор элвиса "?:"
-                //}
-                geoPointsList.add(GeoPoint(currentLocation.latitude, currentLocation.longitude))
+                if (currentLocation.speed > 0.4 || isDebug) {
+                    // Из-за не большой неточности показаний GPS (дрожания на одном месте) данные дистанции все время будут добавляться.
+                    // Если скорость не меняется больше значения (высчитать экспериментально или сделать настройки), то суммируем новые значения дистанции
+                    // Режим debug так как на виртуальном девайся скорость не показывается дистанция не будет увеличиваться.
+                    distance += lastLocation?.distanceTo(currentLocation)!! // (currentLocation ?: lastLocation)!! / ?: 0.0f оператор элвиса "?:"
+                    //}
+                    geoPointsList.add(GeoPoint(currentLocation.latitude, currentLocation.longitude))
+                }
                 val locModel = LocationModel(
                     currentLocation.speed,
+//                    currentLocation.accuracy, // точность местоположения, как вариант потестить для исправления дрожания gps
                     distance,
                     geoPointsList
                 )
                 sendLocData(locModel)
             }
             lastLocation = currentLocation
-//            Log.d("MylogLoc", "${lResult.lastLocation?.latitude}")
             Log.d("MylogLoc", "$distance")
         }
     }
@@ -103,7 +110,7 @@ class LocationService : Service() {
             val nChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Location Service",
-                NotificationManager.IMPORTANCE_DEFAULT //IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_DEFAULT
             )
             val nManager = getSystemService(NotificationManager::class.java) as NotificationManager
             nManager.createNotificationChannel(nChannel)
@@ -129,12 +136,15 @@ class LocationService : Service() {
     }
 
     private fun initLocation() {
+        val updateInterval = PreferenceManager.getDefaultSharedPreferences(this)
+            .getString("update_time_key", "3000")?.toLongOrNull() ?: 3000L
         locRequest = LocationRequest.create()
-        locRequest.interval = 5000
-        locRequest.fastestInterval = 5000
+        locRequest.interval = updateInterval
+        locRequest.fastestInterval = updateInterval
         locRequest.priority = PRIORITY_HIGH_ACCURACY
         // Класс, который дает возможность получать сведения о местоположении
         locProvider = LocationServices.getFusedLocationProviderClient(baseContext)
+        Log.d("ML", "$updateInterval")
     }
 
     private fun startLocationUpdates() {

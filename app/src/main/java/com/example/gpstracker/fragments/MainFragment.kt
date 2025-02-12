@@ -26,7 +26,6 @@ import com.example.gpstracker.MainApp
 import com.example.gpstracker.MainViewModel
 import com.example.gpstracker.R
 import com.example.gpstracker.databinding.FragmentMainBinding
-import com.example.gpstracker.db.MainDb
 import com.example.gpstracker.db.TrackItem
 import com.example.gpstracker.location.LocationModel
 import com.example.gpstracker.location.LocationService
@@ -42,7 +41,6 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 import java.util.Timer
 import java.util.TimerTask
-import kotlin.text.*
 
 class MainFragment : Fragment() {
     private var locationModel: LocationModel? = null
@@ -111,6 +109,7 @@ class MainFragment : Fragment() {
         model.locationUpdates.observe(viewLifecycleOwner) {
             val distance = "Distance: ${String.format("%.1f", it.distance)} m"
             val velocity = "Velocity: ${String.format("%.1f", 3.6f * it.velocity)} km/h"
+//            val velocity = "Velocity: ${it.velocity} m/s"
             val averageVelocity = "Average velocity: ${getAverageSpeed(it.distance)} km/h"
             tvDistance.text = distance
             tvVelocity.text = velocity
@@ -185,7 +184,7 @@ class MainFragment : Fragment() {
             null,
             getCurrentTime(),
             TimeUtils.getDate(),
-            String.format("%.1f", locationModel?.distance?.div(1000) ?: 0),
+            String.format("%.1f", locationModel?.distance?.div(1000) ?: 0.0f),
             getAverageSpeed(locationModel?.distance ?: 0.0f),
             geoPointsToString(locationModel?.geoPointsList ?: listOf())
         )
@@ -219,6 +218,7 @@ class MainFragment : Fragment() {
         } else {
             isFirstLaunch = false // Сбрасываем флаг после первого запуска
         }
+        firstStart = true // продолжение прорисовки линии polyline после pause
     }
 
     override fun onPause() {
@@ -239,15 +239,23 @@ class MainFragment : Fragment() {
 
     // Инициализация карты
     private fun initOsm() = with(binding) {
-        map.setMultiTouchControls(true) // управление зуумом на физическом устройстве щипком
+
+//        binding.map.invalidate()
+
+        // Кеширование в новой версии OSM включенно по умолчанию, нижи размер кеш
+        Configuration.getInstance().tileFileSystemCacheMaxBytes = 50L * 1024 * 1024 // 50MB кеша
+
+        // Тест исправления мелкого шрифта на карте
+//        binding.map.setTileSource(TileSourceFactory.MAPNIK) // Или TilesSourceFactory.HIKEBIKEMAP
+
+        map.setMultiTouchControls(true) // Управление зуумом на физическом устройстве щипком
         pl = Polyline()
-//        pl?.outlinePaint?.color = Color.BLUE
         pl?.outlinePaint?.color = Color.parseColor(
             PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .getString("color_key", "#FF00ADFF")
         )
         map.controller.setZoom(18.0)
-//        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
+        //        map.controller.animateTo(GeoPoint(42.87382619104484, 74.59014113895424)) // Бишкек
         // GpsMyLocationProvider - выдает местоположение
         val mLocProvider = GpsMyLocationProvider(activity)
         // Overlay - слой наложения точек, меток на карте и получение местоположения
@@ -263,8 +271,8 @@ class MainFragment : Fragment() {
         mLocOverlay.runOnFirstFix {
             // Очищаем экран при первом запуске
             map.overlays.clear()
-            map.overlays.add(mLocOverlay)
             map.overlays.add(pl)
+            map.overlays.add(mLocOverlay)
         }
     }
 
@@ -397,7 +405,7 @@ class MainFragment : Fragment() {
 
     // Добавление точек онлайн
     private fun addPoint(list: List<GeoPoint>) {
-        pl?.addPoint(list[list.size - 1])
+        if (list.isNotEmpty()) pl?.addPoint(list[list.size - 1])
     }
 
     // Заполнение точек после возврата в приложение из фонового сервиса
