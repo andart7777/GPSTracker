@@ -63,7 +63,7 @@
         android:background="#99FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Average velocity: 3.5 km/h"
+        android:text="Average speed: 0.0 km/h"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="@+id/tvTime"
         app:layout_constraintTop_toBottomOf="@+id/tvTime" />
@@ -76,7 +76,7 @@
         android:background="#99FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Velocity: 3.5 km/h"
+        android:text="Speed: 0.0 km/h"
         android:textColor="@color/black"
         app:layout_constraintStart_toStartOf="@+id/tvAverageVel"
         app:layout_constraintTop_toBottomOf="@+id/tvAverageVel" />
@@ -89,7 +89,7 @@
         android:background="#99FFFFFF"
         android:paddingStart="5dp"
         android:paddingEnd="5dp"
-        android:text="Distance: 16.5 km"
+        android:text="Distance: 0.0 km"
         android:textColor="@color/black"
         android:textSize="24sp"
         app:layout_constraintStart_toStartOf="@+id/tvVelocity"

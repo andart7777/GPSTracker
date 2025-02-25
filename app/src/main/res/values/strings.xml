@@ -4,6 +4,7 @@
     <string name="home">Home</string>
     <string name="tracks">Tracks</string>
     <string name="settings">Settings</string>
+    <string name="stepcounter">StepCounter</string>
     <!--    Наименование категорий экрана настроек -->
     <string name="location">Location</string>
     <string name="update_time">Update time</string>
