@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:title="@string/home"
-        android:icon="@drawable/ic_home"
         android:id="@+id/id_home"
-        android:orderInCategory="100"/>
+        android:icon="@drawable/ic_home"
+        android:orderInCategory="100"
+        android:title="@string/home" />
     <item
-        android:title="@string/tracks"
-        android:icon="@drawable/ic_list"
         android:id="@+id/id_tracks"
-        android:orderInCategory="200"/>
+        android:icon="@drawable/ic_list"
+        android:orderInCategory="200"
+        android:title="@string/tracks" />
     <item
-        android:title="@string/settings"
-        android:icon="@drawable/ic_settings"
         android:id="@+id/id_settings"
-        android:orderInCategory="300"/>
-
-
+        android:icon="@drawable/ic_settings"
+        android:orderInCategory="300"
+        android:title="@string/settings" />
+    <item
+        android:id="@+id/id_stepcounter"
+        android:icon="@drawable/ic_menu_stepcounter"
+        android:orderInCategory="400"
+        android:title="@string/stepcounter" />
 </menu>
