@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,18 +14,21 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.example.gpstracker.databinding.StepCounterBinding
+import com.example.gpstracker.databinding.StepCounterWithCardBinding
 import com.example.gpstracker.stepcounter.StepCounterService
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 
 class StepCounterFragment : Fragment() {
-    private lateinit var binding: StepCounterBinding
+    private lateinit var binding: StepCounterWithCardBinding
 
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = StepCounterBinding.inflate(inflater, container, false)
+        binding = StepCounterWithCardBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -42,6 +46,7 @@ class StepCounterFragment : Fragment() {
             requestPermissions(arrayOf(Manifest.permission.ACTIVITY_RECOGNITION), 1001)
         } else {
             startStepService()
+            setupChart()
         }
     }
 
@@ -64,6 +69,27 @@ class StepCounterFragment : Fragment() {
             binding.circularProgressBar.setProgressCompat(steps, true)
         }
     }
+
+
+    private fun setupChart() {
+        val days = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+        val entries = mutableListOf<BarEntry>()
+        val random = java.util.Random()
+
+        for ((index, day) in days.withIndex()) {
+            val steps = random.nextInt(900) + 100 // Генерируем случайное число от 100 до 1000
+            entries.add(BarEntry(index.toFloat(), steps.toFloat()))
+        }
+
+        val barDataSet = BarDataSet(entries, "Шаги за неделю")
+        barDataSet.color = Color.parseColor("#219BCC")
+        barDataSet.valueTextSize = 14f
+
+        val barData = BarData(barDataSet)
+        binding.barChart.data = barData
+        binding.barChart.invalidate()
+    }
+
 
     private fun startStepService() {
         requireContext().startService(Intent(requireContext(), StepCounterService::class.java))
