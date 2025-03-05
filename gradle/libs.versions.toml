@@ -17,8 +17,11 @@ room = "2.6.1"
 xosmbonuspack = "6.7.0"
 xosmdroidAndroid = "6.1.10"
 ksp = "1.9.22-1.0.17" #"1.8.10-1.0.9"
+mpandroidchart = "3.1.0"
 
 [libraries]
+mpandroidchart = { group = "com.github.PhilJay", name = "MPAndroidChart", version.ref = "mpandroidchart" }
+
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

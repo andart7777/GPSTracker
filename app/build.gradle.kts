@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
 
+    // Chart
+    implementation(libs.mpandroidchart)
     implementation(libs.xosmdroid.android)
     implementation(libs.xosmbonuspack)
     implementation(libs.androidx.core.ktx)
